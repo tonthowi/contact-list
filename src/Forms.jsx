@@ -40,6 +40,7 @@ const Forms = (props) => {
               onChange={props.handleNumChange}
             />
             <Button
+              primaryButton={true}
               type='submit'
               text='Add'
             />

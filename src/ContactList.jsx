@@ -3,7 +3,8 @@ import Input from './components/Input'
 import Shell from './components/Shell'
 import Empty from './components/Empty'
 import Dropdown from './components/Dropdown'
-import { DocumentMagnifyingGlassIcon, DocumentIcon } from '@heroicons/react/24/outline'
+import Button from './components/Button'
+import { DocumentMagnifyingGlassIcon, DocumentIcon, TrashIcon } from '@heroicons/react/24/outline'
 import { AnimatePresence, motion } from 'framer-motion'
 
 
@@ -81,6 +82,14 @@ const ContactList = (props) => {
                 <p className="text-sm font-semibold leading-6 text-gray-900">{person.name}</p>
                 <p className="mt-1 truncate text-xs leading-5 text-gray-500">{person.email}</p>
                 <p className="mt-1 truncate text-xs leading-5 text-gray-500">{person.phoneNumber}</p>
+                <div className='mt-1'>
+                  <Button
+                    primaryButton={false}
+                    onClick={() => props.onDelete(person.id)}
+                    text="Delete"
+                    icon={<TrashIcon />}
+                  />
+                </div>
               </div>
             </motion.li>
           ))}

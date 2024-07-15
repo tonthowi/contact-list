@@ -97,6 +97,16 @@ const App = () => {
      ? peoples
      : peoples.filter(person => person.name.toLowerCase().includes(showSearch.toLowerCase()))
 
+  // Handle delete actions
+  const handleDeletion = id => {
+    peopleService
+     .remove(id)
+     .then(removedPeople => {
+        console.log('Contact deleted', removedPeople)
+        setPeoples(peoples.filter(person => person.id !== id))
+      })
+  }
+
   // Handle search input change
   const handleSearchChange = (event) => {
     event.preventDefault()
@@ -140,6 +150,7 @@ const App = () => {
           searchValue={showSearch}
           handleSearchChange={handleSearchChange}
           peoples={personToShow}
+          onDelete={handleDeletion}
           alert={alert}
           setAlert={(alertState) => {
             setAlert(alertState)
