@@ -51,33 +51,30 @@ const App = () => {
     }
 
     // Check for duplicate contacts in the list. Display alert if duplicates found.
-    if (formData) {
-      const duplicateMessages = []
-      if (peoples.find(person => person.name === formData.name)) {
-        duplicateMessages.push(`${formData.name} already exists in the contact list`)
-      }
-      else if (peoples.find(person => person.email === formData.email)) {
-        duplicateMessages.push(`${formData.email} already exists in the contact list`)
-      }
-      else if (peoples.find(person => person.phoneNumber === formData.phoneNumber)) {
-        duplicateMessages.push(`${formData.phoneNumber} already exists in the contact list`)
-      }
-      // Display alert if duplicate contact found in the list. Otherwise, add new contact to the list.
-      else if (duplicateMessages.length > 0) {
-        setAlert({ messages: duplicateMessages, show: true })
-      } else {
-          peopleService
-          .create(formData)
-          .then(returnedData => {
-            setPeoples([returnedData, ...peoples])
-          })
-          .then(() => {
-            resetFormFields() // Reset form fields
-            setAlert({ messages: [], show: false }) // Hide alert
-          })
-      }}
-  }
+    const duplicateMessages = []
+    if (peoples.find(person => person.name === formData.name)) {
+      duplicateMessages.push(`${formData.name} already exists in the contact list`)
+    }
+    if (peoples.find(person => person.email === formData.email)) {
+      duplicateMessages.push(`${formData.email} already exists in the contact list`)
+    }
+    if (peoples.find(person => person.phoneNumber === formData.phoneNumber)) {
+      duplicateMessages.push(`${formData.phoneNumber} already exists in the contact list`)
+    }
 
+    // Display alert if duplicate contact found in the list. Otherwise, add new contact to the list.
+    if (duplicateMessages.length > 0) {
+      setAlert({ messages: duplicateMessages, show: true })
+    } else {
+      peopleService
+      .create(formData)
+      .then(returnedData => {
+        console.log('New contact added',returnedData)
+        setPeoples([formData, ...peoples]) // Add new contact to the list
+        resetFormFields() // Reset form fields
+        setAlert({ messages: [], show: false }) // Hide alert
+      })
+    }}
 
   // Sort contacts alphabetically A to Z
   const sortAlphabetically = () => {
