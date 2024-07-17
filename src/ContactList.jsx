@@ -4,7 +4,7 @@ import Shell from './components/Shell'
 import Empty from './components/Empty'
 import Dropdown from './components/Dropdown'
 import Button from './components/Button'
-import { DocumentMagnifyingGlassIcon, DocumentIcon, TrashIcon } from '@heroicons/react/24/outline'
+import { DocumentMagnifyingGlassIcon, DocumentIcon, TrashIcon, PencilSquareIcon } from '@heroicons/react/24/outline'
 import { AnimatePresence, motion } from 'framer-motion'
 
 
@@ -82,11 +82,15 @@ const ContactList = (props) => {
                 <p className="text-sm font-semibold leading-6 text-gray-900">{person.name}</p>
                 <p className="mt-1 truncate text-xs leading-5 text-gray-500">{person.email}</p>
                 <p className="mt-1 truncate text-xs leading-5 text-gray-500">{person.phoneNumber}</p>
-                <div className='mt-1'>
+                <div className='mt-2 space-x-2'>
+                <Button
+                    primaryButton={false}
+                    onClick={() => props.onEdit(person.id)}
+                    icon={<PencilSquareIcon />}
+                  />
                   <Button
                     primaryButton={false}
                     onClick={() => props.onDelete(person.id)}
-                    text="Delete"
                     icon={<TrashIcon />}
                   />
                 </div>

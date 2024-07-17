@@ -15,8 +15,8 @@ const Button = (props) => {
       {props.primaryButton ? (
         props.text
       ) : (
-        <div className='h-4 w-4'>
-          {props.icon}
+        <div className='min-h-4 min-w-4'>
+          {props.icon}{props.text}
         </div>
       )}
     </motion.button>

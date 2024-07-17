@@ -5,7 +5,7 @@ import Forms from './Forms'
 import ContactList from './ContactList'
 
 import peopleService from './services/peoples.js'
-
+import EditModal from './components/modal/EditModal.jsx'
 
 const App = () => {
   const [peoples, setPeoples] = useState([])
@@ -13,35 +13,42 @@ const App = () => {
   const [newEmail, setNewEmail] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [showSearch, setShowSearch] = useState('')
-  const [alert, setAlert] = useState({message: [], show: false})
+  const [alert, setAlert] = useState({messages: [], show: false})
+  const [editModalVisible, setEditModalVisible] = useState(false)
+  const [editId, setEditId] = useState(null)
+  const [editName, setEditName] = useState('')
+  const [editEmail, setEditEmail] = useState('')
+  const [editNumber, setEditNumber] = useState('')
 
-  // Handle API call to fetch contacts from the server and update the state with the response data 
   useEffect(() => {
     peopleService
-    .getAll()
-    .then(initialPeoples => {
-      setPeoples(initialPeoples)
-      console.log('Initialize peoples from the json',initialPeoples)
-    })
+      .getAll()
+      .then(initialPeoples => {
+        setPeoples(initialPeoples)
+        console.log('Initialize peoples from the json',initialPeoples)
+      })
   },[])
 
-  // Reset form fields to default values for name, email, and phone number
   const resetFormFields = () => {
     setNewName('')
     setNewEmail('')
     setNewNumber('')
   }
-  // Add new contact to the list of contacts and display alert if duplicate contact found
+
+  const resetEditFormFields = () => {
+    setEditName('')
+    setEditEmail('')
+    setEditNumber('')
+  }
+
   const addPerson = (event) => {
     event.preventDefault()
 
-    // Check if any of the form fields are empty. Display alert if any field is empty.
     if (newName === '' || newEmail === '' || newNumber === '') {
       setAlert({ messages: ['Please fill in all fields'], show: true })
       return
     }
-    
-    // Create new contact object with unique ID, current timestamp, and form data.
+
     const formData = {
       id: uuidv4(),
       name: newName,
@@ -50,7 +57,6 @@ const App = () => {
       timestamp: Date.now()
     }
 
-    // Check for duplicate contacts in the list. Display alert if duplicates found.
     const duplicateMessages = []
     if (peoples.find(person => person.name === formData.name)) {
       duplicateMessages.push(`${formData.name} already exists in the contact list`)
@@ -62,21 +68,20 @@ const App = () => {
       duplicateMessages.push(`${formData.phoneNumber} already exists in the contact list`)
     }
 
-    // Display alert if duplicate contact found in the list. Otherwise, add new contact to the list.
     if (duplicateMessages.length > 0) {
       setAlert({ messages: duplicateMessages, show: true })
     } else {
       peopleService
-      .create(formData)
-      .then(returnedData => {
-        console.log('New contact added',returnedData)
-        setPeoples([formData, ...peoples]) // Add new contact to the list
-        resetFormFields() // Reset form fields
-        setAlert({ messages: [], show: false }) // Hide alert
-      })
-    }}
+        .create(formData)
+        .then(returnedData => {
+          console.log('New contact added',returnedData)
+          setPeoples([formData, ...peoples])
+          resetFormFields()
+          setAlert({ messages: [], show: false })
+        })
+    }
+  }
 
-  // Sort contacts alphabetically A to Z
   const sortAlphabetically = () => {
     const sortedAtoZ = [...peoples].sort((a, b) => {
       if (!a.name || !b.name) {
@@ -86,50 +91,94 @@ const App = () => {
     })
     setPeoples(sortedAtoZ)
   }
-  // Sort contacts by the most recently added
+
   const sortNewlyAdded = () => {
     const sortedNewlyAdded = [...peoples].sort( (a, b) => b.timestamp - a.timestamp )
     setPeoples(sortedNewlyAdded)
   }
 
-  // Filter contacts based on search keyword
   const personToShow = showSearch === ''
      ? peoples
      : peoples.filter(person => person.name.toLowerCase().includes(showSearch.toLowerCase()))
 
-  // Handle delete actions
+  const handleEdit = (id) => {
+    const person = peoples.find(person => person.id === id)
+    if (person) {
+      setEditId(id)
+      setEditName(person.name)
+      setEditEmail(person.email)
+      setEditNumber(person.phoneNumber)
+      setEditModalVisible(true)
+    }
+  }
+
+  const handleSaveEdit = () => {
+    const updatedPerson = {
+      id: editId,
+      name: editName,
+      email: editEmail,
+      phoneNumber: editNumber,
+      timestamp: peoples.find(person => person.id === editId).timestamp
+    }
+
+    peopleService
+      .update(editId, updatedPerson)
+      .then(returnedPerson => {
+        console.log('Contact updated', returnedPerson)
+        setPeoples(peoples.map(person => person.id !== editId ? person : returnedPerson))
+        resetEditFormFields()
+        setAlert({ messages: [], show: false })
+        setEditModalVisible(false)
+      })
+      .catch(error => {
+        console.error('Error updating contact', error)
+        setAlert({ messages: ['Error updating contact'], show: true })
+      })
+  }
+  
   const handleDeletion = id => {
     peopleService
-     .remove(id)
-     .then(removedPeople => {
+      .remove(id)
+      .then(removedPeople => {
         console.log('Contact deleted', removedPeople)
         setPeoples(peoples.filter(person => person.id !== id))
       })
   }
 
-  // Handle search input change
   const handleSearchChange = (event) => {
     event.preventDefault()
     setShowSearch(event.target.value)
   }
 
-  // Handle name input change
-  const handleNameChange = (event) => {
+  const handleNameCreate = (event) => {
     event.preventDefault()
     setNewName(event.target.value)
   }
 
-  // Handle email input change
-  const handleEmailChange = (event) => {
+  const handleEmailCreate = (event) => {
     event.preventDefault()
     setNewEmail(event.target.value)
   }
 
-  // Handle phone number input change
-  const handleNumChange = (event) => {
+  const handleNumCreate = (event) => {
     event.preventDefault()
     setNewNumber(event.target.value)
   }
+
+  const handleNameEdit = (event) => {
+    event.preventDefault()
+    setEditName(event.target.value)
+  }
+
+  const handleEmailEdit = (event) => {
+    event.preventDefault()
+    setEditEmail(event.target.value)
+  }
+
+  const handleNumEdit = (event) => {
+    event.preventDefault()
+    setEditNumber(event.target.value)
+  } 
 
   return (
     <div className='min-h-screen max-w-full space-y-6 p-4 sm:p-4 lg:p-4'>
@@ -137,9 +186,9 @@ const App = () => {
 
         <Forms
           onSubmit={addPerson}
-          handleNameChange={handleNameChange}
-          handleEmailChange={handleEmailChange}
-          handleNumChange={handleNumChange}
+          handleNameChange={handleNameCreate}
+          handleEmailChange={handleEmailCreate}
+          handleNumChange={handleNumCreate}
           nameValue={newName}
           emailValue={newEmail}
           numValue={newNumber}
@@ -150,6 +199,7 @@ const App = () => {
           searchValue={showSearch}
           handleSearchChange={handleSearchChange}
           peoples={personToShow}
+          onEdit={handleEdit}
           onDelete={handleDeletion}
           alert={alert}
           setAlert={(alertState) => {
@@ -158,7 +208,24 @@ const App = () => {
           }}
         />
 
-      </div>     
+      </div>
+      <EditModal
+        show= {editModalVisible}
+        onClose= {() => setEditModalVisible(false)}
+        title="Edit"
+        onSubmit= {
+          (event) => {
+            event.preventDefault()
+            handleSaveEdit()
+          }
+        }
+        nameValue={editName}
+        onNameChange={handleNameEdit}
+        emailValue={editEmail}
+        onEmailChange={handleEmailEdit}
+        phoneNumberValue={editNumber}
+        onPhoneNumberChange={handleNumEdit}
+      />
     </div>
   )
 }
