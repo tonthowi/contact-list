@@ -13,7 +13,8 @@ const App = () => {
   const [newEmail, setNewEmail] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [showSearch, setShowSearch] = useState('')
-  const [alert, setAlert] = useState({messages: [], show: false})
+  const [alert, setAlert] = useState({ messages: [], show: false })
+  const [editAlert, setEditAlert] = useState({ messages: [], show: false })
   const [editModalVisible, setEditModalVisible] = useState(false)
   const [editId, setEditId] = useState(null)
   const [editName, setEditName] = useState('')
@@ -25,9 +26,9 @@ const App = () => {
       .getAll()
       .then(initialPeoples => {
         setPeoples(initialPeoples)
-        console.log('Initialize peoples from the json',initialPeoples)
+        console.log('Initialize peoples from the json', initialPeoples)
       })
-  },[])
+  }, [])
 
   const resetFormFields = () => {
     setNewName('')
@@ -39,6 +40,20 @@ const App = () => {
     setEditName('')
     setEditEmail('')
     setEditNumber('')
+  }
+
+  const checkForDuplicates = (name, email, phoneNumber, excludeId = null) => {
+    const duplicateMessages = []
+    if (peoples.find(person => person.name === name && person.id !== excludeId)) {
+      duplicateMessages.push(`${name} already exists in the contact list`)
+    }
+    if (peoples.find(person => person.email === email && person.id !== excludeId)) {
+      duplicateMessages.push(`${email} already exists in the contact list`)
+    }
+    if (peoples.find(person => person.phoneNumber === phoneNumber && person.id !== excludeId)) {
+      duplicateMessages.push(`${phoneNumber} already exists in the contact list`)
+    }
+    return duplicateMessages
   }
 
   const addPerson = (event) => {
@@ -57,24 +72,14 @@ const App = () => {
       timestamp: Date.now()
     }
 
-    const duplicateMessages = []
-    if (peoples.find(person => person.name === formData.name)) {
-      duplicateMessages.push(`${formData.name} already exists in the contact list`)
-    }
-    if (peoples.find(person => person.email === formData.email)) {
-      duplicateMessages.push(`${formData.email} already exists in the contact list`)
-    }
-    if (peoples.find(person => person.phoneNumber === formData.phoneNumber)) {
-      duplicateMessages.push(`${formData.phoneNumber} already exists in the contact list`)
-    }
-
+    const duplicateMessages = checkForDuplicates(formData.name, formData.email, formData.phoneNumber)
     if (duplicateMessages.length > 0) {
       setAlert({ messages: duplicateMessages, show: true })
     } else {
       peopleService
         .create(formData)
         .then(returnedData => {
-          console.log('New contact added',returnedData)
+          console.log('New contact added', returnedData)
           setPeoples([formData, ...peoples])
           resetFormFields()
           setAlert({ messages: [], show: false })
@@ -93,13 +98,13 @@ const App = () => {
   }
 
   const sortNewlyAdded = () => {
-    const sortedNewlyAdded = [...peoples].sort( (a, b) => b.timestamp - a.timestamp )
+    const sortedNewlyAdded = [...peoples].sort((a, b) => b.timestamp - a.timestamp)
     setPeoples(sortedNewlyAdded)
   }
 
   const personToShow = showSearch === ''
-     ? peoples
-     : peoples.filter(person => person.name.toLowerCase().includes(showSearch.toLowerCase()))
+    ? peoples
+    : peoples.filter(person => person.name.toLowerCase().includes(showSearch.toLowerCase()))
 
   const handleEdit = (id) => {
     const person = peoples.find(person => person.id === id)
@@ -121,21 +126,26 @@ const App = () => {
       timestamp: peoples.find(person => person.id === editId).timestamp
     }
 
-    peopleService
-      .update(editId, updatedPerson)
-      .then(returnedPerson => {
-        console.log('Contact updated', returnedPerson)
-        setPeoples(peoples.map(person => person.id !== editId ? person : returnedPerson))
-        resetEditFormFields()
-        setAlert({ messages: [], show: false })
-        setEditModalVisible(false)
-      })
-      .catch(error => {
-        console.error('Error updating contact', error)
-        setAlert({ messages: ['Error updating contact'], show: true })
-      })
+    const duplicateMessages = checkForDuplicates(updatedPerson.name, updatedPerson.email, updatedPerson.phoneNumber, editId)
+    if (duplicateMessages.length > 0) {
+      setEditAlert({ messages: duplicateMessages, show: true })
+    } else {
+      peopleService
+        .update(editId, updatedPerson)
+        .then(returnedPerson => {
+          console.log('Contact updated', returnedPerson)
+          setPeoples(peoples.map(person => person.id !== editId ? person : returnedPerson))
+          resetEditFormFields()
+          setEditAlert({ messages: [], show: false })
+          setEditModalVisible(false)
+        })
+        .catch(error => {
+          console.error('Error updating contact', error)
+          setAlert({ messages: ['Error updating contact'], show: true })
+        })
+    }
   }
-  
+
   const handleDeletion = id => {
     peopleService
       .remove(id)
@@ -178,7 +188,7 @@ const App = () => {
   const handleNumEdit = (event) => {
     event.preventDefault()
     setEditNumber(event.target.value)
-  } 
+  }
 
   return (
     <div className='min-h-screen max-w-full space-y-6 p-4 sm:p-4 lg:p-4'>
@@ -210,21 +220,24 @@ const App = () => {
 
       </div>
       <EditModal
-        show= {editModalVisible}
-        onClose= {() => setEditModalVisible(false)}
+        show={editModalVisible}
+        onClose={() => {
+          setEditModalVisible(false)
+          setEditAlert(false)
+        }}
         title="Edit"
-        onSubmit= {
-          (event) => {
-            event.preventDefault()
-            handleSaveEdit()
-          }
-        }
+        onSubmit={(event) => {
+          event.preventDefault()
+          handleSaveEdit()
+        }}
         nameValue={editName}
         onNameChange={handleNameEdit}
         emailValue={editEmail}
         onEmailChange={handleEmailEdit}
         phoneNumberValue={editNumber}
         onPhoneNumberChange={handleNumEdit}
+        alert={editAlert}
+        setAlert={setEditAlert}
       />
     </div>
   )
