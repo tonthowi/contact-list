@@ -26,7 +26,6 @@ const App = () => {
       .getAll()
       .then(initialPeoples => {
         setPeoples(initialPeoples)
-        console.log('Initialize peoples from the json', initialPeoples)
       })
   }, [])
 
@@ -78,11 +77,13 @@ const App = () => {
     } else {
       peopleService
         .create(formData)
-        .then(returnedData => {
-          console.log('New contact added', returnedData)
+        .then(() => {
           setPeoples([formData, ...peoples])
           resetFormFields()
           setAlert({ messages: [], show: false })
+        })
+        .catch(error => {
+          setAlert({ messages: [`${error.response.data.error}`], show: true })
         })
     }
   }
@@ -133,14 +134,12 @@ const App = () => {
       peopleService
         .update(editId, updatedPerson)
         .then(returnedPerson => {
-          console.log('Contact updated', returnedPerson)
           setPeoples(peoples.map(person => person.id !== editId ? person : returnedPerson))
           resetEditFormFields()
           setEditAlert({ messages: [], show: false })
           setEditModalVisible(false)
         })
-        .catch(error => {
-          console.error('Error updating contact', error)
+        .catch(() => {
           setAlert({ messages: ['Error updating contact'], show: true })
         })
     }
@@ -149,8 +148,7 @@ const App = () => {
   const handleDeletion = id => {
     peopleService
       .remove(id)
-      .then(removedPeople => {
-        console.log('Contact deleted', removedPeople)
+      .then(() => {
         setPeoples(peoples.filter(person => person.id !== id))
       })
   }

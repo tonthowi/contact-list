@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const baseUrl = 'http://localhost:3000/peoples' // Replace 'http://localhost:3000/peoples' with the actual API endpoint.
+const baseUrl = '/api/peoples'
 
 const getAll = () => {
     const request = axios.get(baseUrl)
